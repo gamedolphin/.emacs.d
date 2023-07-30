@@ -1,0 +1,17 @@
+/.cache/
+/.lsp-session-v1
+/auto-save-list/
+/eln-cache/
+/elpa/
+/history
+/projectile-bookmarks.eld
+/projects
+/transient/
+/tree-sitter/
+/url/
+/var/
+/backups/
+/eshell/
+/init.old.el
+/multisession/
+/projectile.cache
