@@ -6,9 +6,14 @@
 (setq custom-file (concat user-emacs-directory "custom.el")) ;; keep this file pristine
 (load custom-file 'noerror)
 
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+
 ;;; Code:
 (use-package emacs
   :ensure t
+  :demand t
   :custom
   ;; ME!
   (user-full-name "Sandeep Nambiar")
@@ -47,20 +52,20 @@
   (desktop-path '("~/.emacs.d/.cache/"))
 
   :init
-  (global-auto-revert-mode t)	;; revert automatically on external file changes
-  (savehist-mode)		;; save minibuffer history
-  ;; base visual
-  (menu-bar-mode -1)			;; no menu bar
-  (toggle-scroll-bar -1)		;; no scroll bar
-  (tool-bar-mode -1)			;; no tool bar either
-  (global-hl-line-mode +1)		;; always highlight current line
-  (blink-cursor-mode -1)		;; stop blinking
-  (global-display-line-numbers-mode 1)	;; always show line numbers
-  (column-number-mode t)		;; column number in the mode line
-  (size-indication-mode t)		;; file size in the mode line
-  (pixel-scroll-precision-mode) ;; smooth mouse scroll
-  (fset 'yes-or-no-p 'y-or-n-p) ;; dont ask me to type yes/no everytime, y/n is good enough
-  (electric-pair-mode)          ;; i mean ... parens should auto create
+  (global-auto-revert-mode t)          ;; revert automatically on external file changes
+  (savehist-mode)                      ;; save minibuffer history
+                                       ;; base visual
+  (menu-bar-mode -1)                   ;; no menu bar
+  (toggle-scroll-bar -1)               ;; no scroll bar
+  (tool-bar-mode -1)                   ;; no tool bar either
+  (global-hl-line-mode +1)             ;; always highlight current line
+  (blink-cursor-mode -1)               ;; stop blinking
+  (global-display-line-numbers-mode 1) ;; always show line numbers
+  (column-number-mode t)               ;; column number in the mode line
+  (size-indication-mode t)             ;; file size in the mode line
+  (pixel-scroll-precision-mode)        ;; smooth mouse scroll
+  (fset 'yes-or-no-p 'y-or-n-p)        ;; dont ask me to type yes/no everytime, y/n is good enough
+  (electric-pair-mode)                 ;; i mean ... parens should auto create
 
   ;; UTF-8 EVERYWHERE
   (prefer-coding-system       'utf-8)
@@ -69,41 +74,30 @@
   (set-keyboard-coding-system 'utf-8)
   (set-language-environment   'utf-8)
 
+  (set-frame-font "Iosevka Semibold 12" nil t) ;; font of the century
+
+  (desktop-save-mode)
+  (desktop-read)
+
+  :hook
+  (before-save . whitespace-cleanup)
+
   :bind
   (("C-<wheel-up>"   . nil)                  ; dont zoom in please
    ("C-<wheel-down>" . nil)                  ; dont zoom in either
    ("C-x k"          . kill-this-buffer))    ; kill the buffer, dont ask
 
-  ;; :custom-face
-  ;; set background to match nord colors, prevent white flash .
-  ;; (default ((t (:foreground "#bbc2cf" :background "#2e3440"))))
-
-  :hook
-  ;; cleanup on save
-  (before-save . whitespace-cleanup)
-
-  :config
-  (set-frame-font "Iosevka Semibold 12" nil t) ;; font of the century
-  (desktop-save-mode)
-  (desktop-read)
-  )
-
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(package-initialize)
-
-(unless (package-installed-p 'vc-use-package)
-  (package-vc-install "https://github.com/slotThe/vc-use-package"))
-(require 'vc-use-package)
+  :mode
+  ("\\.rs\\'" . rust-ts-mode)
+  ("\\.go\\'" . go-ts-mode)
+  ("\\.ts\\'" . typescript-ts-mode)
+  ("\\.tsx\\'" . tsx-ts-mode)
+  ("\\.cs\\'" . csharp-ts-mode))
 
 (use-package diminish :defer t)
+(use-package eldoc :defer t :diminish eldoc-mode)
 
-(use-package eldoc
-  :defer t
-  :diminish eldoc-mode)
-
-(use-package nerd-icons
-  :defer t
+(use-package nerd-icons :defer t
   :custom
   (nerd-icons-color-icons nil))
 
@@ -127,8 +121,6 @@
 
 (use-package pulsar
   :defer t
-  :vc (:fetcher github
-                :repo protesilaos/pulsar)
   :init
   (defface pulsar-nord
     '((default :extend t)
@@ -158,8 +150,6 @@
   :bind ("M-m" . er/expand-region))
 
 (use-package puni
-  :vc (:fetcher github
-                :repo AmaiKinono/puni)
   :defer t
   :init
   (puni-global-mode))
@@ -177,26 +167,23 @@
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file (styles basic partial-completion)))))
 
-(use-package ag
-  :defer t)
+(use-package ag :defer t)
 
 (use-package consult
   :defer t
-  :bind (
-         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-         ("M-g g" . consult-goto-line)             ;; orig. goto-line
-         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-         )
+  :bind
+  ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+  ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+  ("M-g g" . consult-goto-line)             ;; orig. goto-line
+  ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
   :custom
   (consult-narrow-key "<"))
 
 (use-package embark
   :bind
-  (("C-'" . embark-act)
-   ("C-;" . embark-dwim)
-   ("C-h B" . embark-bindings))
-
+  ("C-'" . embark-act)
+  ("C-;" . embark-dwim)
+  ("C-h B" . embark-bindings)
   :init
   (setq prefix-help-command #'embark-prefix-help-command)
   :config
@@ -212,17 +199,19 @@
 
 (use-package vertico
   :defer t
+  :custom
+  (read-file-name-completion-ignore-case t)
+  (read-buffer-completion-ignore-case t)
+  (completion-ignore-case t)
+  (enable-recursive-minibuffers t)
   :init
   (vertico-mode)
   :config
   (setq minibuffer-prompt-properties
         '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-  (setq enable-recursive-minibuffers t))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
 
-(use-package marginalia
-  :defer t
-  :init (marginalia-mode))
+(use-package marginalia :defer t :init (marginalia-mode))
 
 (use-package crux
   :defer t
@@ -231,9 +220,7 @@
   ("C-c C-w" . crux-transpose-windows)
   ("C-a" . crux-move-beginning-of-line))
 
-(use-package magit
-  :defer t
-  :bind (("C-M-g" . magit-status)))
+(use-package magit :defer t :bind (("C-M-g" . magit-status)))
 
 (use-package apheleia
   :defer t
@@ -263,11 +250,10 @@
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
-(use-package cape
-  :defer t)
+(use-package cape :defer t)
 
-(use-package treesit-auto
-  :defer t
+(use-package treesit-auto :defer t
+  :functions global-treesit-auto-mode
   :config
   (global-treesit-auto-mode))
 
@@ -277,9 +263,7 @@
   :config
   (yas-global-mode 1))
 
-(use-package yasnippet-snippets
-  :defer t
-  :after yasnippet)
+(use-package yasnippet-snippets :defer t :after yasnippet)
 
 (use-package projectile
   :diminish projectile-mode
@@ -287,8 +271,7 @@
   (projectile-globally-ignored-directories (append '("node_modules")))
   :bind-keymap ("C-c p" . projectile-command-map)
   :config
-  (projectile-mode +1)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+  (projectile-mode +1))
 
 (use-package exec-path-from-shell
   :custom
@@ -299,8 +282,9 @@
 (use-package rust-ts-mode
   :defer t
   :custom
-  (lsp-rust-analyzer-cargo-watch-command "check")
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
   (lsp-rust-analyzer-macro-expansion-method 'lsp-rust-analyzer-macro-expansion-default)
+  (lsp-rust-analyzer-exclude-dirs ["Temp/**"])
   (lsp-eldoc-render-all t))
 
 (use-package typescript-ts-mode
@@ -311,7 +295,7 @@
   (typescript-ts-mode-indent-offset 2))
 
 (use-package lsp-mode
-  :commands lsp
+  :commands (lsp lsp-deferred lsp-format-buffer lsp-organize-imports)
   :diminish lsp-lens-mode
   :bind-keymap
   ("C-c l" . lsp-command-map)
@@ -330,24 +314,26 @@
   :config
   (defun lsp-cleanup ()
     (lsp-format-buffer)
-    (lsp-organize-imports t t))
+    (lsp-organize-imports))
   :hook
   (lsp-completion-mode . my/lsp-mode-setup-completion)
   ((go-ts-mode
     rust-ts-mode
     csharp-ts-mode
-    typescript-ts-mode) . lsp)
+    typescript-ts-mode) . lsp-deferred)
   (lsp-mode . lsp-enable-which-key-integration)
   (before-save . lsp-cleanup))
 
 (use-package lsp-ui :commands lsp-ui-mode
   :custom
   (lsp-ui-doc-enable t)
+  (lsp-ui-sideline-diagnostic-max-lines 4)
   (lsp-ui-doc-show-with-mouse nil)
   (lsp-ui-doc-position 'bottom)
   (lsp-ui-doc-show-with-cursor t)
   (lsp-eldoc-enable-hover nil)
   )
+
 
 (provide 'init)
 ;;; init.el ends here
